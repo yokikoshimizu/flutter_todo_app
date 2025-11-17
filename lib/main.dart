@@ -30,7 +30,7 @@ class TodoPage extends StatefulWidget {
 }
 
 //ダミーのToDo
-class _TodoPageState extends State<TodoPage> {
+class TodoPageState extends State<TodoPage> {
   final List<String> _todos = [
     '牛乳を買う',
     'メールを返信する',
