@@ -1,5 +1,26 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(const MyApp());
+}
+
+//アプリ全体のルートウィジェット
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ToDo App',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.blue,
+      ),
+      home: const TodoPage(),
+    );
+  }
+}
+
 class TodoPage extends StatefulWidget {
   const TodoPage({super.key});
 
