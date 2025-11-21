@@ -4,7 +4,7 @@ void main() {
   runApp(const MyApp());
 }
 
-//アプリ全体のルートウィジェット
+// アプリ全体のルートウィジェット
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -23,26 +23,26 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
           elevation: 0,
-        )
+        ),
       ),
       home: const TodoPage(),
     );
   }
 }
 
-//Todoを表すデータクラス
+// Todo を表すデータクラス
 class Todo {
   String title;
   bool isDone;
 
-  //コンストラクタ
+  // コンストラクタ
   Todo({
-    required this.title,  //必須パラメータ
-    this.isDone = false,  //省略時は未完了
+    required this.title, // 必須パラメータ
+    this.isDone = false, // 省略時は未完了
   });
 }
 
-//ToDo一覧画面（状態あり）
+// ToDo 一覧画面（状態あり）
 class TodoPage extends StatefulWidget {
   const TodoPage({super.key});
 
@@ -51,15 +51,19 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  //ToDoのリスト（文字列ではなくTodo型 ）
+  // ToDo のリスト（文字列ではなく Todo 型）
   final List<Todo> _todos = [
     Todo(title: '牛乳を買う'),
     Todo(title: '返信する'),
     Todo(title: '勉強する'),
   ];
 
-  //入力用のコントローラ
+  // 入力用のコントローラ
   final TextEditingController _textController = TextEditingController();
+
+  // 未完了タスクの件数を計算するゲッター
+  int get _remainingCount =>
+      _todos.where((todo) => !todo.isDone).length;
 
   @override
   void dispose() {
@@ -67,44 +71,46 @@ class _TodoPageState extends State<TodoPage> {
     super.dispose();
   }
 
-  //タスク追加ダイアログ
+  // タスク追加ダイアログ
   Future<void> _showAddTodoDialog() async {
     _textController.clear();
 
     final String? newTodoTitle = await showDialog<String>(
-        context: context,
-        builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            title: const Text('新しいタスク'),
-            content: TextField(
-              controller: _textController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: '例：買い物に行く',
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('新しいタスク'),
+          content: TextField(
+            controller: _textController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: '例：買い物に行く',
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); //キャンセル（null）を返す
+                // キャンセル（null）を返す
+                Navigator.of(dialogContext).pop();
               },
               child: const Text('キャンセル'),
             ),
             TextButton(
               onPressed: () {
                 final text = _textController.text.trim();
-                Navigator.of(dialogContext).pop(text); //入力文字列を返す
+                // 入力文字列を返す
+                Navigator.of(dialogContext).pop(text);
               },
               child: const Text('追加'),
             ),
           ],
-          );
-        },
+        );
+      },
     );
 
     if (newTodoTitle != null && newTodoTitle.isNotEmpty) {
       setState(() {
-        //ここで Todo を1つ作ってリストに追加
+        // ここで Todo を 1 つ作ってリストに追加
         _todos.add(Todo(title: newTodoTitle));
       });
     }
@@ -116,46 +122,100 @@ class _TodoPageState extends State<TodoPage> {
       appBar: AppBar(
         title: const Text('ToDoリスト'),
       ),
-      body: ListView.builder(
-        itemCount: _todos.length,
-        itemBuilder: (context, index) {
-          final todo = _todos[index];
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          // タスクが0件なら EmptyView を表示
+          child: _todos.isEmpty
+              ? const _EmptyView()
+              : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 残りタスク件数のバー
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.list_alt_outlined),
+                    const SizedBox(width: 8),
+                    Text(
+                      '未完了タスク：$_remainingCount件',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // リスト本体（スクロールさせるため Expanded で包む）
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _todos.length,
+                  itemBuilder: (context, index) {
+                    final todo = _todos[index];
 
-          return CheckboxListTile(
-            value: todo.isDone, //チェック状態
-            onChanged: (bool? value) {
-              setState(() {
-                // nullの場合に？？でフォールバック（フォールバックって？？）
-                todo.isDone = value ?? false;
-              });
-            },
-            title: Text(
-              todo.title,
-              style: todo.isDone
-                ? const TextStyle(
-                    decoration: TextDecoration.lineThrough, //取り消し線
-                    color: Colors.grey,
-                  )
-                  : const TextStyle(
-                fontSize: 16,
-              ), //未完了の時は普通のスタイル
-            ),
-            //右側に削除ボタンをつける
-            secondary: IconButton(
-              tooltip: '削除',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () {
-                  setState(() {
-                    _todos.removeAt(index);
-                  });
-                },
+                    return Padding(
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: CheckboxListTile(
+                          value: todo.isDone, // チェック状態
+                          onChanged: (bool? value) {
+                            setState(() {
+                              // value が null のときは false を使う
+                              todo.isDone = value ?? false;
+                            });
+                          },
+                          title: Text(
+                            todo.title,
+                            style: todo.isDone
+                                ? const TextStyle(
+                              decoration:
+                              TextDecoration.lineThrough,
+                              // 取り消し線
+                              color: Colors.grey,
+                            )
+                                : const TextStyle(
+                              fontSize: 16,
+                            ), // 未完了の時は普通のスタイル
+                          ),
+                          // 右側に削除ボタンをつける
+                          secondary: IconButton(
+                            tooltip: '削除',
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () {
+                              setState(() {
+                                _todos.removeAt(index);
+                              });
+                            },
+                          ),
+                          contentPadding:
+                          const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 4,
-              ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddTodoDialog,
@@ -166,7 +226,7 @@ class _TodoPageState extends State<TodoPage> {
   }
 }
 
-//タスクが0件のときに表示するウィジェット
+// タスクが0件のときに表示するウィジェット
 class _EmptyView extends StatelessWidget {
   const _EmptyView();
 
@@ -196,7 +256,7 @@ class _EmptyView extends StatelessWidget {
             style: TextStyle(
               color: Colors.grey,
             ),
-          )
+          ),
         ],
       ),
     );
